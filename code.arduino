@@ -1,0 +1,72 @@
+// Solar Panel Tracking System
+// Using Arduino UNO + LDR sensors + L298N Motor Driver
+
+// Define LDR pins
+int LDR_Left = A0;
+int LDR_Right = A1;
+
+// Motor driver pins
+int motorIn1 = 8;
+int motorIn2 = 9;
+int motorENA = 10;  // Enable pin for speed control (PWM)
+
+int threshold = 50; // Sensitivity for difference in light
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(LDR_Left, INPUT);
+  pinMode(LDR_Right, INPUT);
+
+  pinMode(motorIn1, OUTPUT);
+  pinMode(motorIn2, OUTPUT);
+  pinMode(motorENA, OUTPUT);
+
+  // Stop motor initially
+  stopMotor();
+}
+
+void loop() {
+  int leftValue = analogRead(LDR_Left);
+  int rightValue = analogRead(LDR_Right);
+
+  Serial.print("LDR Left: ");
+  Serial.print(leftValue);
+  Serial.print(" | LDR Right: ");
+  Serial.println(rightValue);
+
+  int diff = leftValue - rightValue;
+
+  if (abs(diff) <= threshold) {
+    // Balanced light → Stop motor
+    stopMotor();
+  } 
+  else if (diff > threshold) {
+    // More light on left → Rotate panel left
+    rotateLeft();
+  } 
+  else if (diff < -threshold) {
+    // More light on right → Rotate panel right
+    rotateRight();
+  }
+
+  delay(200);
+}
+
+void rotateLeft() {
+  digitalWrite(motorIn1, HIGH);
+  digitalWrite(motorIn2, LOW);
+  analogWrite(motorENA, 150); // Motor speed (0–255)
+}
+
+void rotateRight() {
+  digitalWrite(motorIn1, LOW);
+  digitalWrite(motorIn2, HIGH);
+  analogWrite(motorENA, 150); // Motor speed
+}
+
+void stopMotor() {
+  digitalWrite(motorIn1, LOW);
+  digitalWrite(motorIn2, LOW);
+  analogWrite(motorENA, 0);
+}
